@@ -1,0 +1,257 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  avatar       String?
+  role         String   @default("USER")
+  googleId     String?  @unique
+  passwordHash String?
+  phone        String?
+  isVerified   Boolean  @default(false)
+  loyaltyPoints Int     @default(0)
+  referralCode String?  @unique @default(cuid())
+  referredBy   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orders        Order[]
+  reviews       Review[]
+  wishlist      Wishlist[]
+  addresses     Address[]
+  customOrders  CustomOrder[]
+  notifications Notification[]
+  payments      Payment[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  icon        String?
+  image       String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  description  String
+  price        Float
+  discountPct  Float    @default(0)
+  images       String   @default("[]")   // JSON array stored as string
+  video        String?
+  categoryId   String
+  stock        Int      @default(0)
+  material     String?
+  tags         String   @default("[]")   // JSON array
+  colors       String   @default("[]")   // JSON array
+  sizes        String   @default("[]")   // JSON array
+  isFeatured   Boolean  @default(false)
+  isBestSeller Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  weight       Float?
+  dimensions   String?
+  rating       Float    @default(0)
+  reviewCount  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  category   Category    @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+  reviews    Review[]
+  wishlist   Wishlist[]
+
+  @@map("products")
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  userId        String
+  status        String   @default("PENDING")
+  subtotal      Float
+  discount      Float    @default(0)
+  shippingCost  Float    @default(0)
+  total         Float
+  couponCode    String?
+  notes         String?
+  trackingNum   String?
+  estimatedDel  DateTime?
+  deliveredAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user      User        @relation(fields: [userId], references: [id])
+  items     OrderItem[]
+  payment   Payment?
+  address   Address?    @relation(fields: [addressId], references: [id])
+  addressId String?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id            String  @id @default(cuid())
+  orderId       String
+  productId     String
+  quantity      Int
+  price         Float
+  customization String? // JSON stored as string
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  orderId         String   @unique
+  userId          String
+  gateway         String
+  transactionId   String?
+  razorpayOrderId String?
+  amount          Float
+  currency        String   @default("INR")
+  status          String   @default("PENDING")
+  metadata        String?  // JSON stored as string
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@map("payments")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  productId  String
+  userId     String
+  rating     Int
+  title      String?
+  comment    String
+  images     String   @default("[]") // JSON array
+  isVerified Boolean  @default(false)
+  helpful    Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([productId, userId])
+  @@map("reviews")
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("wishlist")
+}
+
+model Coupon {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  description String?
+  discountPct Float?
+  discountAmt Float?
+  minOrder    Float     @default(0)
+  maxDiscount Float?
+  maxUses     Int       @default(100)
+  usedCount   Int       @default(0)
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("coupons")
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  label     String   @default("Home")
+  name      String
+  phone     String
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  pincode   String
+  country   String   @default("India")
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id])
+  orders Order[]
+
+  @@map("addresses")
+}
+
+model CustomOrder {
+  id          String    @id @default(cuid())
+  userId      String
+  productType String
+  photos      String    @default("[]") // JSON array
+  name        String?
+  colors      String    @default("[]") // JSON array
+  glitter     Boolean   @default(false) 
+  test        String?
+  flowers     Boolean   @default(false)
+  shape       String?
+  notes       String?
+  status      String    @default("PENDING")
+  quotedPrice Float?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("custom_orders")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  type      String   @default("GENERAL")
+  data      String?  // JSON stored as string
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
