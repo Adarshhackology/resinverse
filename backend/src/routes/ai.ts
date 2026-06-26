@@ -50,7 +50,7 @@ Customer Profile:
 - Interests: ${interests?.join(', ') || 'general'}
 
 Available Products:
-${products.map(p => `ID: ${p.id} | Name: ${p.name} | Price: ₹${p.price * (1 - p.discountPct / 100)} | Tags: ${p.tags.join(', ')} | Rating: ${p.rating}`).join('\n')}
+${products.map(p => `ID: ${p.id} | Name: ${p.name} | Price: ₹${p.price * (1 - p.discountPct / 100)} | Tags: ${(typeof p.tags === 'string' ? JSON.parse(p.tags) : p.tags || []).join(', ')} | Rating: ${p.rating}`).join('\n')}
 
 Recommend 3-5 most suitable products from the list. For each recommendation, provide:
 1. Product ID

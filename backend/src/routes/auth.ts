@@ -10,8 +10,8 @@ const router = Router();
 const generateToken = (user: { id: string; email: string; role: string }) => {
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET!,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    process.env.JWT_SECRET || 'fallback_secret',
+    { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
   );
 };
 
