@@ -107,12 +107,7 @@ export default function LoginPage() {
             </motion.button>
           </form>
 
-          {/* Test credentials */}
-          <div className="mt-4 glass rounded-xl p-3 text-xs text-white/40 text-center">
-            <p className="font-semibold text-white/60 mb-1">Test Credentials</p>
-            <p>User: test@resinverse.in / User@123</p>
-            <p>Admin: admin@resinverse.in / Admin@123</p>
-          </div>
+
 
           <div className="text-center mt-5">
             <p className="text-white/40 text-sm">
