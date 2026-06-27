@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Upload, X, StopCircle, Maximize, Loader2, Link2, Droplet } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { removeBackground } from '@imgly/background-removal';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 
 interface VirtualTryOnProps {
@@ -26,27 +25,10 @@ export function VirtualTryOn({ productImage, onClose }: VirtualTryOnProps) {
   const requestRef = useRef<number>();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Process AI Background Removal
+  // Disable AI Background removal to fix extreme loading times
   useEffect(() => {
-    let objectUrl: string | null = null;
-    async function process() {
-      setIsProcessingAI(true);
-      try {
-        const blob = await removeBackground(productImage);
-        objectUrl = URL.createObjectURL(blob);
-        setProcessedImage(objectUrl);
-      } catch (err) {
-        console.error('AI Background Removal failed:', err);
-        setProcessedImage(productImage); // Fallback to original image
-      } finally {
-        setIsProcessingAI(false);
-      }
-    }
-    process();
-
-    return () => {
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
+    setProcessedImage(productImage);
+    setIsProcessingAI(false);
   }, [productImage]);
 
   // Initialize MediaPipe FaceLandmarker
@@ -90,11 +72,25 @@ export function VirtualTryOn({ productImage, onClose }: VirtualTryOnProps) {
             const landmarks = results.faceLandmarks[0];
             const containerBox = containerRef.current!.getBoundingClientRect();
             
-            // MediaPipe gives normalized coordinates (0 to 1). 
-            // We need to map them to the container dimensions.
-            // Also, our video is mirrored (scaleX(-1)), so x needs to be flipped!
-            const mapX = (x: number) => (1 - x) * containerBox.width;
-            const mapY = (y: number) => y * containerBox.height;
+            // Calculate actual rendered video dimensions to fix alignment
+            const videoRatio = video.videoWidth / video.videoHeight;
+            const containerRatio = containerBox.width / containerBox.height;
+            let renderedWidth = containerBox.width;
+            let renderedHeight = containerBox.height;
+            let offsetX = 0;
+            let offsetY = 0;
+
+            if (videoRatio > containerRatio) {
+              renderedHeight = containerBox.width / videoRatio;
+              offsetY = (containerBox.height - renderedHeight) / 2;
+            } else {
+              renderedWidth = containerBox.height * videoRatio;
+              offsetX = (containerBox.width - renderedWidth) / 2;
+            }
+
+            // Map normalized coordinates, factoring in letterboxing and mirroring
+            const mapX = (x: number) => offsetX + (1 - x) * renderedWidth;
+            const mapY = (y: number) => offsetY + y * renderedHeight;
 
             if (placementType === 'necklace') {
               // Bottom of chin is landmark 152
@@ -284,13 +280,14 @@ export function VirtualTryOn({ productImage, onClose }: VirtualTryOnProps) {
                     {isProcessingAI ? (
                       <div className="w-48 h-48 rounded-xl bg-black/50 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white/80 gap-3">
                         <Loader2 className="w-8 h-8 animate-spin text-fuchsia-400" />
-                        <span className="text-xs font-accent tracking-widest uppercase">AI Processing</span>
+                        <span className="text-xs font-accent tracking-widest uppercase">Loading...</span>
                       </div>
                     ) : (
                       <img 
                         src={processedImage || productImage} 
                         alt="Product Overlay" 
                         className="w-48 h-48 object-contain drop-shadow-2xl"
+                        style={{ mixBlendMode: 'multiply' }}
                         draggable={false}
                       />
                     )}
