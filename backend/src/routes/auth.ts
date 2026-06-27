@@ -5,7 +5,15 @@ import { body, validationResult } from 'express-validator';
 import prisma from '../lib/prisma';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { OAuth2Client } from 'google-auth-library';
+import nodemailer from 'nodemailer';
 
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_APP_PASSWORD,
+  },
+});
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = Router();
@@ -214,6 +222,79 @@ router.post('/google', [
   } catch (err) {
     console.error('Google Auth Error:', err);
     return res.status(500).json({ error: 'Google auth failed' });
+  }
+});
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', [
+  body('email').isEmail().normalizeEmail(),
+], async (req: Request, res: Response) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  const { email } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      // Return success even if user doesn't exist to prevent email enumeration
+      return res.json({ message: 'If an account exists, a reset link was sent.' });
+    }
+
+    // Generate a secure reset token valid for 15 minutes
+    const resetToken = jwt.sign(
+      { id: user.id },
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '15m' }
+    );
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+    await transporter.sendMail({
+      from: `"ResinVerse" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Reset your ResinVerse Password',
+      html: `
+        <div style="font-family: Arial, sans-serif; text-align: center; color: #333;">
+          <h2>Reset Your Password</h2>
+          <p>We received a request to reset your password. Click the button below to choose a new one:</p>
+          <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background-color: #8B5CF6; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0;">Reset Password</a>
+          <p style="font-size: 12px; color: #888;">If you didn't request this, you can safely ignore this email. The link expires in 15 minutes.</p>
+        </div>
+      `,
+    });
+
+    return res.json({ message: 'If an account exists, a reset link was sent.' });
+  } catch (err) {
+    console.error('Forgot Password Error:', err);
+    return res.status(500).json({ error: 'Failed to send reset email' });
+  }
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', [
+  body('token').notEmpty(),
+  body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+], async (req: Request, res: Response) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  const { token, newPassword } = req.body;
+
+  try {
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as { id: string };
+    
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    
+    await prisma.user.update({
+      where: { id: decoded.id },
+      data: { passwordHash },
+    });
+
+    return res.json({ message: 'Password reset successful. You can now log in.' });
+  } catch (err) {
+    return res.status(400).json({ error: 'Invalid or expired reset token' });
   }
 });
 
