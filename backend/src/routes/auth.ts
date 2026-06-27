@@ -4,6 +4,9 @@ import jwt from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
 import prisma from '../lib/prisma';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { OAuth2Client } from 'google-auth-library';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = Router();
 
@@ -168,20 +171,34 @@ router.post('/change-password', authenticate, [
   }
 });
 
-// POST /api/auth/google (Google OAuth stub - accepts token from frontend)
+// POST /api/auth/google
 router.post('/google', [
-  body('googleToken').notEmpty(),
-  body('email').isEmail(),
-  body('name').notEmpty(),
+  body('credential').notEmpty(),
 ], async (req: Request, res: Response) => {
-  const { email, name, avatar, googleId } = req.body;
+  const { credential } = req.body;
   
   try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) return res.status(400).json({ error: 'Invalid Google token' });
+
+    const { email, name, picture: avatar, sub: googleId } = payload;
+
     let user = await prisma.user.findUnique({ where: { email } });
     
     if (!user) {
       user = await prisma.user.create({
-        data: { email, name, avatar, googleId, isVerified: true, referralCode: generateReferralCode() },
+        data: { 
+          email, 
+          name: name || 'User', 
+          avatar, 
+          googleId, 
+          isVerified: true, 
+          referralCode: generateReferralCode() 
+        },
       });
     } else if (!user.googleId) {
       user = await prisma.user.update({ where: { id: user.id }, data: { googleId, avatar } });
@@ -194,7 +211,8 @@ router.post('/google', [
     });
 
     return res.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role, avatar: user.avatar }, token });
-  } catch {
+  } catch (err) {
+    console.error('Google Auth Error:', err);
     return res.status(500).json({ error: 'Google auth failed' });
   }
 });

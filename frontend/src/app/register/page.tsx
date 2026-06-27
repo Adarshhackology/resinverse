@@ -11,6 +11,7 @@ import { Eye, EyeOff, Mail, Lock, User, Phone, Sparkles, ArrowRight } from 'luci
 import { authAPI } from '@/lib/api';
 import { useStore } from '@/lib/store';
 import toast from 'react-hot-toast';
+import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -71,6 +72,14 @@ export default function RegisterPage() {
         </div>
 
         <div className="glass-card rounded-3xl p-8">
+          <GoogleAuthButton />
+          
+          <div className="relative flex items-center py-4">
+            <div className="flex-grow border-t border-white/10"></div>
+            <span className="flex-shrink-0 mx-4 text-white/40 text-sm">or sign up with email</span>
+            <div className="flex-grow border-t border-white/10"></div>
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Name */}
             <div>

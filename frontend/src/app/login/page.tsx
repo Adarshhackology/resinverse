@@ -11,6 +11,7 @@ import { Eye, EyeOff, Mail, Lock, Sparkles } from 'lucide-react';
 import { authAPI } from '@/lib/api';
 import { useStore } from '@/lib/store';
 import toast from 'react-hot-toast';
+import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email'),
@@ -63,6 +64,14 @@ export default function LoginPage() {
         </div>
 
         <div className="glass-card rounded-3xl p-8">
+          <GoogleAuthButton />
+          
+          <div className="relative flex items-center py-4">
+            <div className="flex-grow border-t border-white/10"></div>
+            <span className="flex-shrink-0 mx-4 text-white/40 text-sm">or sign in with email</span>
+            <div className="flex-grow border-t border-white/10"></div>
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label className="text-sm text-white/60 font-accent mb-1.5 block">Email</label>
