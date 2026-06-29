@@ -170,7 +170,7 @@ function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="flex items-center justify-center gap-8 md:gap-16 mt-16"
+          className="grid grid-cols-2 md:flex items-center justify-center gap-6 md:gap-16 mt-16"
         >
           {[
             { value: '50K+', label: 'Happy Customers' },

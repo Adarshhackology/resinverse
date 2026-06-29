@@ -270,7 +270,7 @@ export default function CheckoutPage() {
                         {showNewAddress && (
                           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                             <div className="glass rounded-2xl p-4 mt-4 space-y-3">
-                              <div className="grid grid-cols-2 gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {[
                                   { label: 'Full Name*', key: 'name', placeholder: 'Priya Sharma' },
                                   { label: 'Phone*', key: 'phone', placeholder: '+91 9876543210' },

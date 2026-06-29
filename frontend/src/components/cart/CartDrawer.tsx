@@ -138,7 +138,7 @@ export function CartDrawer() {
                                 removeFromCart(item.productId);
                                 toast.success('Removed from cart');
                               }}
-                              className="ml-auto p-1.5 rounded-full text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all opacity-0 group-hover:opacity-100"
+                              className="ml-auto p-1.5 rounded-full text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
                             >
                               <Trash2 size={14} />
                             </button>
