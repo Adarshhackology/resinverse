@@ -76,10 +76,17 @@ router.get('/analytics', authenticate, requireAdmin, async (_req: AuthRequest, r
       customers: { total: totalCustomers, thisMonth: monthCustomers },
       products: { total: totalProducts, lowStock: lowStockProducts },
       recentOrders,
-      topProducts: topProducts.map(tp => ({
-        ...tp,
-        product: topProductDetails.find(p => p.id === tp.productId),
-      })),
+      topProducts: topProducts.map(tp => {
+        const prod = topProductDetails.find(p => p.id === tp.productId);
+        let parsedImages = [];
+        if (prod && prod.images) {
+          try { parsedImages = JSON.parse(prod.images); } catch(e) {}
+        }
+        return {
+          ...tp,
+          product: prod ? { ...prod, images: parsedImages } : null
+        };
+      }),
     });
   } catch (err) {
     console.error(err);
