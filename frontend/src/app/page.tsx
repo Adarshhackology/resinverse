@@ -264,7 +264,7 @@ function InstagramFeed() {
               whileHover={{ y: -5 }}
               className="relative min-w-[250px] aspect-[4/5] rounded-2xl overflow-hidden snap-center group cursor-pointer"
             >
-              <img src={img} alt="Instagram Post" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <img src={img} alt="Instagram Post" loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <Heart className="text-white fill-white scale-0 group-hover:scale-100 transition-transform duration-500 delay-100" size={32} />
               </div>
