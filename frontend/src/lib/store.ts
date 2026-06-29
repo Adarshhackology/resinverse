@@ -37,6 +37,8 @@ interface StoreState {
   clearCart: () => void;
   cartTotal: () => number;
   cartCount: () => number;
+  appliedCoupon: { code: string; discount: number } | null;
+  setAppliedCoupon: (coupon: { code: string; discount: number } | null) => void;
 
   // UI
   isCartOpen: boolean;
@@ -99,14 +101,11 @@ export const useStore = create<StoreState>()(
           ),
         });
       },
-      clearCart: () => set({ cart: [] }),
-      cartTotal: () => {
-        return get().cart.reduce((sum, item) => {
-          const price = item.price * (1 - item.discountPct / 100);
-          return sum + price * item.quantity;
-        }, 0);
-      },
-      cartCount: () => get().cart.reduce((sum, item) => sum + item.quantity, 0),
+      clearCart: () => set({ cart: [], appliedCoupon: null }),
+      cartTotal: () => get().cart.reduce((total, item) => total + (item.price * (1 - item.discountPct / 100)) * item.quantity, 0),
+      cartCount: () => get().cart.reduce((count, item) => count + item.quantity, 0),
+      appliedCoupon: null,
+      setAppliedCoupon: (coupon) => set({ appliedCoupon: coupon }),
 
       // UI state
       isCartOpen: false,

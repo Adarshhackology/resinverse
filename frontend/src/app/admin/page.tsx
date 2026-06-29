@@ -125,14 +125,15 @@ export default function AdminPage() {
   }
 
   const handleUpdateOrderStatus = async (orderId: string, status: string) => {
-    let trackingNum = '';
-    let courierName = '';
+    let payload: any = { status };
     if (status === 'SHIPPED') {
-      trackingNum = window.prompt('Enter the AWB Tracking Number:') || '';
-      courierName = window.prompt('Enter the Courier Name (e.g., BlueDart, Delhivery, Shiprocket):') || '';
+      const tNum = window.prompt('Enter the AWB Tracking Number (Leave empty to skip):');
+      const cName = window.prompt('Enter the Courier Name (e.g., BlueDart, Delhivery, Shiprocket):');
+      if (tNum !== null) payload.trackingNum = tNum;
+      if (cName !== null) payload.courierName = cName;
     }
     try {
-      await adminAPI.updateOrderStatus(orderId, { status, trackingNum, courierName });
+      await adminAPI.updateOrderStatus(orderId, payload);
       toast.success(`Order status updated to ${status}`);
     } catch { toast.error('Failed to update status'); }
   };

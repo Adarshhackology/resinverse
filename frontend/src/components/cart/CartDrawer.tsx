@@ -10,9 +10,8 @@ import { cartAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 export function CartDrawer() {
-  const { cart, isCartOpen, setCartOpen, updateQuantity, removeFromCart, cartTotal, cartCount } = useStore();
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
+  const { cart, isCartOpen, setCartOpen, updateQuantity, removeFromCart, cartTotal, cartCount, appliedCoupon, setAppliedCoupon } = useStore();
+  const [couponCode, setCouponCode] = useState(appliedCoupon?.code || '');
   const [couponLoading, setCouponLoading] = useState(false);
 
   const subtotal = cartTotal();

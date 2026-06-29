@@ -23,11 +23,11 @@ declare global { interface Window { Razorpay: any; } }
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, cartTotal, cartCount, clearCart, user } = useStore();
+  const { cart, cartTotal, cartCount, clearCart, user, appliedCoupon, setAppliedCoupon } = useStore();
   const [step, setStep] = useState(1);
   const [selectedAddressId, setSelectedAddressId] = useState('');
-  const [couponCode, setCouponCode] = useState('');
-  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponCode, setCouponCode] = useState(appliedCoupon?.code || '');
+  const [couponDiscount, setCouponDiscount] = useState(appliedCoupon?.discount || 0);
   const [loading, setLoading] = useState(false);
   const [orderId, setOrderId] = useState('');
   const [showNewAddress, setShowNewAddress] = useState(false);
@@ -124,6 +124,7 @@ export default function CheckoutPage() {
     try {
       const res = await cartAPI.applyCoupon(couponCode, subtotal);
       setCouponDiscount(res.data.discount);
+      setAppliedCoupon({ code: res.data.coupon.code, discount: res.data.discount });
       toast.success(`Coupon applied! -₹${res.data.discount.toFixed(0)}`);
     } catch (err: any) { toast.error(err.response?.data?.error || 'Invalid coupon'); }
   };
@@ -235,10 +236,10 @@ export default function CheckoutPage() {
                       {/* Coupon */}
                       <div className="flex gap-2 mt-5">
                         <div className="relative flex-1">
-                          <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-400" />
-                          <input type="text" value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())} placeholder="WELCOME20" className="input-glass pl-9 text-sm w-full" />
+                          <Tag size={14} className="absolute left-3 top-[10px] text-purple-400" />
+                          <input type="text" value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())} placeholder="WELCOME20" className="input-glass pl-9 text-sm w-full h-[38px]" />
                         </div>
-                        <button onClick={handleApplyCoupon} className="btn-secondary text-sm px-4">Apply</button>
+                        <button onClick={handleApplyCoupon} className="btn-secondary text-sm px-4 h-[38px]">Apply</button>
                       </div>
                     </div>
                   )}

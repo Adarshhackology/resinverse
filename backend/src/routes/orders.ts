@@ -191,7 +191,7 @@ router.put('/admin/:id/status', authenticate, requireAdmin, [
         userId: order.userId, type: 'ORDER_UPDATE',
         title: `Order ${req.body.status === 'SHIPPED' ? 'Shipped! 🚚' : req.body.status === 'DELIVERED' ? 'Delivered! 🎉' : 'Updated'}`,
         body: `Your order #${order.id.slice(-8).toUpperCase()} is now ${order.status.toLowerCase()}.`,
-        data: { orderId: order.id },
+        data: JSON.stringify({ orderId: order.id }),
       },
     });
 
