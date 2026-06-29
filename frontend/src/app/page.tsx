@@ -225,21 +225,22 @@ function InstagramFeed() {
   });
 
   let images = [
-    "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400",
-    "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400",
-    "https://images.unsplash.com/photo-1571439908151-512a84a20b08?w=400",
-    "https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?w=400",
-    "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400",
+    "/instagram/1.jpg",
+    "/instagram/2.jpg",
+    "/instagram/3.jpg",
+    "/instagram/4.jpg",
+    "/instagram/1.jpg", // Repeat one to fill the scrolling container
   ];
 
-  if (settings && settings.instagramPhotos) {
-    try {
-      const parsed = JSON.parse(settings.instagramPhotos);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        images = parsed;
-      }
-    } catch (e) {}
-  }
+  // Force use local optimized images for the showcase
+  // if (settings && settings.instagramPhotos) {
+  //   try {
+  //     const parsed = JSON.parse(settings.instagramPhotos);
+  //     if (Array.isArray(parsed) && parsed.length > 0) {
+  //       images = parsed;
+  //     }
+  //   } catch (e) {}
+  // }
 
 
   return (
