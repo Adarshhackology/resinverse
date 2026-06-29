@@ -219,13 +219,28 @@ function ScrollingMarquee() {
 
 // ─── Instagram Style Feed ────────────────────────────────────────────────────
 function InstagramFeed() {
-  const images = [
+  const { data: settings } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: () => settingsAPI.get().then(r => r.data.settings),
+  });
+
+  let images = [
     "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400",
     "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400",
     "https://images.unsplash.com/photo-1571439908151-512a84a20b08?w=400",
     "https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?w=400",
     "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400",
   ];
+
+  if (settings && settings.instagramPhotos) {
+    try {
+      const parsed = JSON.parse(settings.instagramPhotos);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        images = parsed;
+      }
+    } catch (e) {}
+  }
+
 
   return (
     <section className="py-20 px-4 overflow-hidden">
@@ -280,6 +295,7 @@ function CategoriesGrid() {
     { slug: 'custom-gifts', name: 'Custom Gifts', icon: '🎁', gradient: 'from-amber-500/20 to-rose-500/20', glow: 'rgba(245,158,11,0.3)' },
     { slug: 'name-tags', name: 'Name Tags', icon: '🏷️', gradient: 'from-teal-500/20 to-cyan-500/20', glow: 'rgba(6,182,212,0.3)' },
   ];
+  const displayCategories = data && data.length > 0 ? data : hardcodedCategories;
 
   return (
     <section className="py-24 px-4">
@@ -292,24 +308,23 @@ function CategoriesGrid() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {hardcodedCategories.map((cat, i) => (
+          {displayCategories.map((cat: any, i: number) => (
             <motion.div
               key={cat.slug}
               initial={{ opacity: 0, scale: 0.8 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.05, duration: 0.4 }}
+              transition={{ delay: i * 0.05 }}
+              whileHover={{ y: -5, scale: 1.02 }}
             >
               <Link href={`/products?category=${cat.slug}`}>
-                <motion.div
-                  whileHover={{ y: -6, scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className={`glass-card rounded-2xl p-5 text-center cursor-pointer group transition-all duration-300 bg-gradient-to-br ${cat.gradient}`}
-                  style={{ '--glow': cat.glow } as any}
+                <div
+                  className={`glass rounded-2xl p-6 text-center cursor-pointer group relative overflow-hidden bg-gradient-to-br ${cat.gradient || 'from-white/5 to-white/10'}`}
+                  style={{ boxShadow: `0 8px 32px ${cat.glow || 'rgba(0,0,0,0.1)'}` }}
                 >
-                  <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300 inline-block">{cat.icon}</div>
-                  <p className="text-sm font-semibold font-accent text-white/80 group-hover:text-white transition-colors">{cat.name}</p>
-                </motion.div>
+                  <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">{cat.icon || '✨'}</div>
+                  <h3 className="font-semibold text-white/90 group-hover:text-white transition-colors">{cat.name}</h3>
+                </div>
               </Link>
             </motion.div>
           ))}

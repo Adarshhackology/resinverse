@@ -143,3 +143,9 @@ export const uploadAPI = {
     return api.post('/upload/images', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
   },
 };
+
+export const settingsAPI = {
+  get: () => api.get('/settings'),
+  update: (data: any) => api.put('/settings', data),
+};
+

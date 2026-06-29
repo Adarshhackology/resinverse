@@ -25,6 +25,7 @@ import aiRoutes from './routes/ai';
 import adminRoutes from './routes/admin';
 import uploadRoutes from './routes/upload';
 import notificationRoutes from './routes/notifications';
+import settingsRoutes from './routes/settings';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -90,6 +91,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // 404 handler
 app.use((_req, res) => {

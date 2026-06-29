@@ -44,6 +44,8 @@ model Category {
   description String?
   icon        String?
   image       String?
+  gradient    String?
+  glow        String?
   sortOrder   Int       @default(0)
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
@@ -254,4 +256,15 @@ model Notification {
   user User @relation(fields: [userId], references: [id])
 
   @@map("notifications")
+}
+
+model SiteSettings {
+  id              String   @id @default("default")
+  instagramPhotos String   @default("[\"https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400\",\"https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400\",\"https://images.unsplash.com/photo-1571439908151-512a84a20b08?w=400\",\"https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?w=400\",\"https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400\"]")
+  footerText      String   @default("Handcrafted resin art pieces made with love. Each piece is unique, aesthetic, and tells your story.")
+  footerEmail     String   @default("hello@resinverse.in")
+  footerLocation  String   @default("Made in India IN")
+  updatedAt       DateTime @updatedAt
+
+  @@map("site_settings")
 }

@@ -8,6 +8,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { adminAPI, productsAPI } from '@/lib/api';
 import { useStore } from '@/lib/store';
 import Link from 'next/link';
+import { SiteSettingsPanel } from '@/components/admin/SiteSettingsPanel';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
@@ -18,6 +19,7 @@ const adminTabs = [
   { id: 'products', label: 'Products', icon: Package },
   { id: 'customers', label: 'Customers', icon: Users },
   { id: 'coupons', label: 'Coupons', icon: Settings },
+  { id: 'site_settings', label: 'Site Settings', icon: Settings },
 ];
 
 const orderStatusColors: Record<string, string> = {
@@ -469,6 +471,9 @@ export default function AdminPage() {
                   </div>
                 </div>
               )}
+
+              {/* Site Settings */}
+              {activeTab === 'site_settings' && <SiteSettingsPanel />}
             </motion.div>
           </AnimatePresence>
         </div>

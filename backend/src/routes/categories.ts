@@ -28,10 +28,10 @@ router.get('/:slug', async (req: Request, res: Response) => {
 });
 
 router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
-  const { name, description, icon, image, sortOrder } = req.body;
+  const { name, description, icon, image, sortOrder, gradient, glow } = req.body;
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   try {
-    const category = await prisma.category.create({ data: { name, slug, description, icon, image, sortOrder: sortOrder || 0 } });
+    const category = await prisma.category.create({ data: { name, slug, description, icon, image, gradient, glow, sortOrder: sortOrder || 0 } });
     return res.status(201).json({ category });
   } catch { return res.status(500).json({ error: 'Failed to create category' }); }
 });

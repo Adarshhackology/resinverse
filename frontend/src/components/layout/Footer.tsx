@@ -5,6 +5,8 @@ import { Sparkles, Heart, Mail, MapPin, Send } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { settingsAPI } from '@/lib/api';
 
 // Inline SVG social icons (lucide-react doesn't include social brands)
 function InstagramIcon({ size = 16 }: { size?: number }) {
@@ -54,6 +56,11 @@ const footerLinks = {
 
 export function Footer() {
   const [email, setEmail] = useState('');
+
+  const { data: settings } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: () => settingsAPI.get().then(r => r.data.settings),
+  });
 
   const handleNewsletter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,17 +120,17 @@ export function Footer() {
               <span className="font-display font-bold text-xl gradient-text-purple">ResinVerse</span>
             </Link>
             <p className="text-white/40 text-sm leading-relaxed mb-5 max-w-xs">
-              Handcrafted resin art pieces made with love. Each piece is unique, aesthetic, and tells your story.
+              {settings?.footerText || 'Handcrafted resin art pieces made with love. Each piece is unique, aesthetic, and tells your story.'}
             </p>
             <p className="text-white/30 text-xs italic font-display">"Crafted Memories, Preserved Forever"</p>
             
             {/* Contact info */}
             <div className="mt-5 space-y-2">
-              <a href="mailto:hello@resinverse.in" className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors">
-                <Mail size={14} /> hello@resinverse.in
+              <a href={`mailto:${settings?.footerEmail || 'hello@resinverse.in'}`} className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors">
+                <Mail size={14} /> {settings?.footerEmail || 'hello@resinverse.in'}
               </a>
               <div className="flex items-center gap-2 text-sm text-white/40">
-                <MapPin size={14} /> Made in India 🇮🇳
+                <MapPin size={14} /> {settings?.footerLocation || 'Made in India 🇮🇳'}
               </div>
             </div>
 
