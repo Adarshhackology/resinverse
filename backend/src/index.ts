@@ -14,7 +14,7 @@ import authRoutes from './routes/auth';
 import productRoutes from './routes/products';
 import categoryRoutes from './routes/categories';
 import orderRoutes from './routes/orders';
-import paymentRoutes from './routes/payments';
+import paymentsRouter from './routes/payments';
 import wishlistRoutes from './routes/wishlist';
 import reviewRoutes from './routes/reviews';
 import cartRoutes from './routes/cart';
@@ -22,11 +22,12 @@ import couponRoutes from './routes/coupons';
 import addressRoutes from './routes/addresses';
 import customOrderRoutes from './routes/customOrders';
 import aiRoutes from './routes/ai';
-import adminRoutes from './routes/admin';
+import adminAnalyticsRouter from './routes/admin';
 import uploadRoutes from './routes/upload';
 import notificationRoutes from './routes/notifications';
-import settingsRoutes from './routes/settings';
+import siteSettingsRouter from './routes/settings';
 import trackingRoutes from './routes/tracking';
+import pagesRouter from './routes/pages';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -81,7 +82,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/payments', paymentRoutes);
+app.use('/api/payments', paymentsRouter);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/cart', cartRoutes);
@@ -89,11 +90,12 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/custom-orders', customOrderRoutes);
 app.use('/api/ai', aiRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', adminAnalyticsRouter);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/settings', settingsRoutes);
+app.use('/api/settings', siteSettingsRouter);
 app.use('/api/tracking', trackingRoutes);
+app.use('/api/pages', pagesRouter);
 
 // 404 handler
 app.use((_req, res) => {

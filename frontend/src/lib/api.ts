@@ -59,6 +59,13 @@ export const productsAPI = {
   delete: (id: string) => api.delete(`/products/${id}`),
 };
 
+export const pagesAPI = {
+  get: (slug: string) => api.get(`/pages/${slug}`),
+  list: () => api.get('/pages/admin/list'),
+  update: (slug: string, data: { title: string; content: string; isActive?: boolean }) => 
+    api.put(`/pages/admin/${slug}`, data),
+};
+
 export const categoriesAPI = {
   list: () => api.get('/categories'),
   get: (slug: string) => api.get(`/categories/${slug}`),

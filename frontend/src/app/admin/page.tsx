@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, TrendingUp, TrendingDown, Package, Users, ShoppingBag, DollarSign, Settings, Plus, Search, Edit, Trash2, ChevronRight, Star, AlertTriangle, CheckCircle, Clock, Truck } from 'lucide-react';
+import { BarChart3, TrendingUp, TrendingDown, Package, Users, ShoppingBag, DollarSign, Settings, Plus, Search, Edit, Trash2, ChevronRight, Star, AlertTriangle, CheckCircle, Clock, Truck, FileText } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { adminAPI, productsAPI } from '@/lib/api';
 import { useStore } from '@/lib/store';
 import Link from 'next/link';
 import { SiteSettingsPanel } from '@/components/admin/SiteSettingsPanel';
+import { PagesAdminPanel } from '@/components/admin/PagesAdminPanel';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
@@ -19,6 +20,7 @@ const adminTabs = [
   { id: 'products', label: 'Products', icon: Package },
   { id: 'customers', label: 'Customers', icon: Users },
   { id: 'coupons', label: 'Coupons', icon: Settings },
+  { id: 'pages', label: 'Pages & Content', icon: FileText },
   { id: 'site_settings', label: 'Site Settings', icon: Settings },
 ];
 
@@ -480,7 +482,14 @@ export default function AdminPage() {
               )}
 
               {/* Site Settings */}
-              {activeTab === 'site_settings' && <SiteSettingsPanel />}
+              {activeTab === 'site_settings' && (
+                <SiteSettingsPanel />
+              )}
+
+              {/* Pages CMS */}
+              {activeTab === 'pages' && (
+                <PagesAdminPanel />
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
