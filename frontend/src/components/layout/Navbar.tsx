@@ -81,7 +81,7 @@ export function Navbar() {
             </Link>
 
             {/* Desktop Nav Links */}
-            <div className="hidden lg:flex items-center gap-1">
+            <div className="hidden xl:flex items-center gap-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
@@ -204,7 +204,7 @@ export function Navbar() {
 
               {/* Mobile menu */}
               <button
-                className="lg:hidden p-2.5 text-white/70 hover:text-white"
+                className="xl:hidden p-2.5 text-white/70 hover:text-white"
                 onClick={() => setMobileOpen(!mobileOpen)}
               >
                 {mobileOpen ? <X size={22} /> : <Menu size={22} />}
@@ -220,7 +220,7 @@ export function Navbar() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden glass border-t border-white/10"
+              className="xl:hidden glass border-t border-white/10"
             >
               <div className="px-4 py-4 flex flex-col gap-1">
                 {navLinks.map((link) => (
