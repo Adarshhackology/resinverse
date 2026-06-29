@@ -180,6 +180,7 @@ router.put('/admin/:id/status', authenticate, requireAdmin, [
       data: {
         status: req.body.status,
         trackingNum: req.body.trackingNum,
+        courierName: req.body.courierName,
         ...(req.body.status === 'DELIVERED' && { deliveredAt: new Date() }),
       },
     });

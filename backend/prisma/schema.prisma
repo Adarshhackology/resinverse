@@ -100,6 +100,7 @@ model Order {
   couponCode    String?
   notes         String?
   trackingNum   String?
+  courierName   String?
   estimatedDel  DateTime?
   deliveredAt   DateTime?
   createdAt     DateTime @default(now())

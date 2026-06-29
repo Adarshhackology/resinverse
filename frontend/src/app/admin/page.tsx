@@ -125,8 +125,14 @@ export default function AdminPage() {
   }
 
   const handleUpdateOrderStatus = async (orderId: string, status: string) => {
+    let trackingNum = '';
+    let courierName = '';
+    if (status === 'SHIPPED') {
+      trackingNum = window.prompt('Enter the AWB Tracking Number:') || '';
+      courierName = window.prompt('Enter the Courier Name (e.g., BlueDart, Delhivery, Shiprocket):') || '';
+    }
     try {
-      await adminAPI.updateOrderStatus(orderId, { status });
+      await adminAPI.updateOrderStatus(orderId, { status, trackingNum, courierName });
       toast.success(`Order status updated to ${status}`);
     } catch { toast.error('Failed to update status'); }
   };

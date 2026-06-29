@@ -149,3 +149,7 @@ export const settingsAPI = {
   update: (data: any) => api.put('/settings', data),
 };
 
+export const trackingAPI = {
+  get: (orderId: string) => api.get(`/tracking/${orderId}`),
+};
+

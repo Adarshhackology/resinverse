@@ -3,10 +3,11 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { User, Package, Heart, Star, Settings, LogOut, ChevronRight, Sparkles, Gift, MapPin, Bell } from 'lucide-react';
+import { User, Package, Heart, Star, Settings, LogOut, ChevronRight, Sparkles, Gift, MapPin, Bell, Truck } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CartDrawer } from '@/components/cart/CartDrawer';
+import { TrackingModal } from '@/components/orders/TrackingModal';
 import { useStore } from '@/lib/store';
 import { ordersAPI, wishlistAPI, reviewsAPI, addressesAPI, notificationsAPI, authAPI } from '@/lib/api';
 import { ProductCard } from '@/components/products/ProductCard';
@@ -42,6 +43,7 @@ function DashboardContent() {
   const [activeTab, setActiveTab] = useState(tabQuery || 'overview');
   const [name, setName] = useState(user?.name || '');
   const [editingProfile, setEditingProfile] = useState(false);
+  const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     if (tabQuery && tabs.some(t => t.id === tabQuery)) {
@@ -244,7 +246,12 @@ function DashboardContent() {
                               ))}
                             </div>
                             {order.trackingNum && (
-                              <p className="text-xs text-purple-400 mt-3">🚚 Tracking: {order.trackingNum}</p>
+                              <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+                                <p className="text-xs text-white/40">AWB: {order.trackingNum} ({order.courierName || 'Shipping'})</p>
+                                <button onClick={() => setTrackingOrderId(order.id)} className="flex items-center gap-1.5 text-xs font-semibold text-purple-400 hover:text-purple-300 transition-colors bg-purple-500/10 hover:bg-purple-500/20 px-3 py-1.5 rounded-lg">
+                                  <Truck size={14} /> Track Order
+                                </button>
+                              </div>
                             )}
                           </div>
                         ))}
@@ -346,6 +353,7 @@ function DashboardContent() {
           </div>
         </div>
       </main>
+      {trackingOrderId && <TrackingModal orderId={trackingOrderId} onClose={() => setTrackingOrderId(null)} />}
       <Footer />
       <CartDrawer />
     </>

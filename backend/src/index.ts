@@ -26,6 +26,7 @@ import adminRoutes from './routes/admin';
 import uploadRoutes from './routes/upload';
 import notificationRoutes from './routes/notifications';
 import settingsRoutes from './routes/settings';
+import trackingRoutes from './routes/tracking';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -92,6 +93,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/tracking', trackingRoutes);
 
 // 404 handler
 app.use((_req, res) => {
