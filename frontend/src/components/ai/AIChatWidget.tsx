@@ -100,7 +100,7 @@ export function AIChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-24 right-6 z-[90] w-[360px] max-h-[560px] glass-card rounded-3xl overflow-hidden flex flex-col shadow-2xl"
+            className="fixed bottom-24 right-6 z-[90] w-[360px] max-h-[560px] bg-[#0a0612] border border-white/10 rounded-3xl overflow-hidden flex flex-col shadow-2xl"
             style={{ boxShadow: '0 24px 80px rgba(139,92,246,0.3)' }}
           >
             {/* Header */}

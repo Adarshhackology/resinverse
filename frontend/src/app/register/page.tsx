@@ -52,6 +52,24 @@ export default function RegisterPage() {
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)' }} />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.2) 0%, transparent 70%)' }} />
+        
+        {/* Floating Locket */}
+        <motion.img 
+          initial={{ y: 20, opacity: 0, rotate: -10 }}
+          animate={{ y: [0, -20, 0], opacity: 0.8, rotate: [-10, 0, -10] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600" 
+          alt="Locket" 
+          className="absolute -right-20 top-32 w-72 h-72 object-cover rounded-full mix-blend-screen blur-[2px] hidden md:block"
+        />
+        <motion.img 
+          initial={{ y: -20, opacity: 0, rotate: 10 }}
+          animate={{ y: [0, 20, 0], opacity: 0.6, rotate: [10, 0, 10] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          src="https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600" 
+          alt="Keychain" 
+          className="absolute -left-20 bottom-20 w-64 h-64 object-cover rounded-full mix-blend-screen blur-[2px] hidden md:block"
+        />
       </div>
 
       <motion.div
