@@ -332,7 +332,7 @@ export default function CheckoutPage() {
                       
                       <div className="bg-white p-4 rounded-2xl inline-block mb-6 shadow-[0_0_30px_rgba(139,92,246,0.3)]">
                         {/* Assuming the user uploads upi-qr.png to the public folder */}
-                        <img src="/upi-qr.png" alt="UPI QR Code" className="w-48 h-48 object-cover rounded-xl" onError={(e) => {
+                        <img src="/upi-qr.jpg" alt="UPI QR Code" className="w-48 h-48 object-cover rounded-xl" onError={(e) => {
                           // Fallback to placeholder if not uploaded yet
                           (e.target as HTMLImageElement).src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=test@upi&pn=ResinVerse&cu=INR';
                         }} />
