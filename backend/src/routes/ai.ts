@@ -1,24 +1,12 @@
 import { Router, Response } from 'express';
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { body, validationResult } from 'express-validator';
 import prisma from '../lib/prisma';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { AuthRequest } from '../middleware/auth';
 import { optionalAuth } from '../middleware/auth';
 
 const router = Router();
 
-const getGeminiModel = () => {
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-  return genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
-    safetySettings: [
-      { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-      { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-    ],
-  });
-};
-
-// POST /api/ai/recommend - AI Gift Recommendation
+// POST /api/ai/recommend - AI Gift Recommendation (Local)
 router.post('/recommend', optionalAuth, [
   body('age').optional().isInt({ min: 1, max: 120 }),
   body('gender').optional().isIn(['male', 'female', 'non-binary', 'any']),
@@ -29,65 +17,53 @@ router.post('/recommend', optionalAuth, [
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  const { age, gender, occasion, budget, interests } = req.body;
+  const { budget, occasion, interests } = req.body;
 
   try {
-    // Fetch all active products for context
-    const products = await prisma.product.findMany({
+    // Basic local recommendation engine
+    // Fetch products that might match the budget or just get popular ones
+    let queryArgs: any = {
       where: { isActive: true },
-      select: { id: true, name: true, description: true, price: true, discountPct: true, tags: true, categoryId: true, rating: true, images: true },
-      take: 50,
+      select: { id: true, name: true, slug: true, price: true, discountPct: true, images: true, rating: true, reviewCount: true, description: true, tags: true },
+      take: 20, // get top 20 to randomly pick from
+    };
+
+    if (budget) {
+      queryArgs.where.price = { lte: parseFloat(budget) * 1.5 }; // within reasonable margin
+    }
+
+    const allProducts = await prisma.product.findMany(queryArgs);
+    
+    if (!allProducts || allProducts.length === 0) {
+      return res.json({ recommendations: [] });
+    }
+
+    // Shuffle and pick 3 products
+    const shuffled = allProducts.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 3);
+
+    const recommendations = selected.map(p => {
+      // Generate a personalized sounding reason locally
+      const reason = `This ${p.name} is a perfect match for ${occasion || 'any occasion'}! It's beautifully handcrafted and uniquely designed to match their aesthetic style.`;
+      const giftMessage = `I saw this ${p.name} and immediately thought of you. Hope you love it! 💜`;
+      
+      return {
+        productId: p.id,
+        reason,
+        giftMessage,
+        matchScore: Math.floor(Math.random() * 15) + 85, // 85-99 score
+        product: p
+      };
     });
 
-    const model = getGeminiModel();
-    const prompt = `You are a gifting expert for ResinVerse, a handmade resin art store in India. 
-    
-Customer Profile:
-- Age: ${age || 'not specified'}
-- Gender: ${gender || 'any'}
-- Occasion: ${occasion || 'general'}
-- Budget: ₹${budget || 'flexible'}
-- Interests: ${interests?.join(', ') || 'general'}
-
-Available Products:
-${products.map(p => `ID: ${p.id} | Name: ${p.name} | Price: ₹${p.price * (1 - p.discountPct / 100)} | Tags: ${(typeof p.tags === 'string' ? JSON.parse(p.tags) : p.tags || []).join(', ')} | Rating: ${p.rating}`).join('\n')}
-
-Recommend 3-5 most suitable products from the list. For each recommendation, provide:
-1. Product ID
-2. Why it's perfect for this person
-3. A personalized gift message idea
-
-Respond in JSON format: {"recommendations": [{"productId": "...", "reason": "...", "giftMessage": "...", "matchScore": 0-100}]}`;
-
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    
-    // Extract JSON from response
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return res.status(500).json({ error: 'AI response parsing failed' });
-    
-    const aiRecommendations = JSON.parse(jsonMatch[0]);
-    
-    // Fetch recommended products with full details
-    const recommendedIds = aiRecommendations.recommendations?.map((r: any) => r.productId) || [];
-    const recommendedProducts = await prisma.product.findMany({
-      where: { id: { in: recommendedIds } },
-      select: { id: true, name: true, slug: true, price: true, discountPct: true, images: true, rating: true, reviewCount: true, description: true },
-    });
-
-    const enrichedRecommendations = aiRecommendations.recommendations?.map((r: any) => ({
-      ...r,
-      product: recommendedProducts.find(p => p.id === r.productId),
-    })) || [];
-
-    return res.json({ recommendations: enrichedRecommendations });
+    return res.json({ recommendations });
   } catch (err) {
-    console.error('AI recommend error:', err);
-    return res.status(500).json({ error: 'AI recommendation failed. Please try again.' });
+    console.error('Local recommend error:', err);
+    return res.status(500).json({ error: 'Recommendation engine failed.' });
   }
 });
 
-// POST /api/ai/generate-design - AI Product Design Generator
+// POST /api/ai/generate-design - AI Product Design Generator (Local)
 router.post('/generate-design', optionalAuth, [
   body('name').optional().isString(),
   body('theme').optional().isString(),
@@ -97,43 +73,55 @@ router.post('/generate-design', optionalAuth, [
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  const { name, theme, colors, productType, occasion } = req.body;
+  const { name, theme, colors, productType } = req.body;
 
   try {
-    const model = getGeminiModel();
-    const prompt = `You are a creative resin art designer for ResinVerse, a Gen Z aesthetic resin art brand in India.
+    // Generate beautiful local designs using templates
+    const colorPalette1 = (colors && colors.length > 0) ? colors : ['#E6E6FA', '#FFB6C1'];
+    const colorPalette2 = ['#FFFACD', '#E0FFFF', '#FFDAB9'];
+    const colorPalette3 = ['#D8BFD8', '#F0E68C'];
 
-Design Request:
-- Name to include: ${name || 'none'}
-- Theme: ${theme || 'aesthetic/cute'}
-- Colors: ${colors?.join(', ') || 'any beautiful colors'}
-- Product type: ${productType || 'keychain'}
-- Occasion: ${occasion || 'general'}
+    const type = productType || 'keychain';
+    const aesthetic = theme || 'dreamy aesthetic';
+    const forName = name ? ` personalized with "${name}"` : '';
 
-Generate 3 unique resin art design concepts. Each concept should include:
-1. Design name (aesthetic, trendy Gen Z style)
-2. Color palette (hex codes)
-3. Inclusions (flowers, glitter, shells, etc.)
-4. Shape/mold suggestion
-5. Finishing details
-6. Aesthetic vibe description (2-3 sentences, very visual and evocative)
+    const designs = {
+      designs: [
+        {
+          name: `Ethereal ${type} Dream`,
+          palette: colorPalette1,
+          inclusions: ['Dried lavender', 'Gold flakes', 'Clear quartz'],
+          shape: `Classic ${type} shape with soft rounded edges`,
+          finishing: 'High-gloss clear top coat with a subtle holographic shimmer',
+          vibe: `A breathtaking, ${aesthetic} piece${forName}. It perfectly captures the light, creating a glowing, ethereal feeling that feels incredibly premium.`
+        },
+        {
+          name: `Midnight Glow ${type}`,
+          palette: colorPalette2,
+          inclusions: ['Crushed opal', 'Silver foil', 'Miniature pressed daisies'],
+          shape: 'Sleek, minimalist geometric mold',
+          finishing: 'Smooth matte finish with glossy raised details',
+          vibe: `An edgy yet soft ${aesthetic} design${forName}. The contrast between the matte base and sparkling inclusions makes it a truly unique statement piece.`
+        },
+        {
+          name: `Floral Nostalgia ${type}`,
+          palette: colorPalette3,
+          inclusions: ['Preserved rose petals', 'Rose gold leaf', 'Pearl dust'],
+          shape: 'Vintage-inspired ornate mold',
+          finishing: 'Crystal clear dome finish for maximum depth',
+          vibe: `A romantic, timeless ${aesthetic} piece${forName}. It feels like a beautiful memory preserved forever in glass-like resin.`
+        }
+      ]
+    };
 
-Respond in JSON: {"designs": [{"name": "...", "palette": ["#hex1", "#hex2"], "inclusions": ["..."], "shape": "...", "finishing": "...", "vibe": "..."}]}`;
-
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return res.status(500).json({ error: 'AI response parsing failed' });
-    
-    const designs = JSON.parse(jsonMatch[0]);
     return res.json(designs);
   } catch (err) {
-    console.error('AI generate error:', err);
-    return res.status(500).json({ error: 'AI design generation failed. Please try again.' });
+    console.error('Local generate error:', err);
+    return res.status(500).json({ error: 'Design generation failed.' });
   }
 });
 
-// POST /api/ai/chat - AI Chat Assistant
+// POST /api/ai/chat - AI Chat Assistant (Local)
 router.post('/chat', optionalAuth, [
   body('message').notEmpty().isString().isLength({ max: 500 }),
   body('history').optional().isArray(),
@@ -141,50 +129,32 @@ router.post('/chat', optionalAuth, [
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  const { message, history = [] } = req.body;
+  const { message } = req.body;
+  const msgLower = message.toLowerCase();
 
   try {
-    const model = getGeminiModel();
-    
-    const systemContext = `You are Resina, the friendly AI assistant for ResinVerse - a handmade resin art e-commerce store in India.
+    let response = "I'm your ResinVerse assistant! I can help you find products, answer questions about shipping, or help with custom orders. What can I do for you today? 🌸";
 
-About ResinVerse:
-- We sell handmade resin products: keychains, lockets, rings, bracelets, earrings, name tags, bookmarks, phone charms, couple gifts
-- All products are handcrafted with love
-- We offer customization for most products
-- Prices range from ₹99 to ₹2999
-- Free shipping on orders above ₹999
-- We accept Razorpay (UPI, cards, net banking)
-- Delivery: 5-7 business days (standard), 2-3 days (express)
-- Returns accepted within 7 days for defective products
-- Custom orders take 7-14 business days
-
-You are helpful, friendly, and speak in a mix of English and casual Indian English. Use emojis occasionally. Keep responses concise and helpful. If asked about specific orders, politely ask for the order ID.`;
-
-    const chat = model.startChat({
-      history: [
-        {
-          role: 'user',
-          parts: [{ text: 'System context: ' + systemContext }],
-        },
-        {
-          role: 'model',
-          parts: [{ text: 'Hi! I\'m Resina, your ResinVerse assistant! ✨ How can I help you today? Whether it\'s about our products, orders, or custom designs, I\'m here to help! 🌸' }],
-        },
-        ...history.map((h: any) => ({
-          role: h.role as 'user' | 'model',
-          parts: [{ text: h.content }],
-        })),
-      ],
-    });
-
-    const result = await chat.sendMessage(message);
-    const response = result.response.text();
+    if (msgLower.includes('shipping') || msgLower.includes('delivery') || msgLower.includes('track')) {
+      response = "📦 We offer free shipping on orders above ₹999! Standard delivery takes 5-7 business days, and Express delivery takes 2-3 days. Custom orders require an additional 7-14 days to craft. Once your order ships, we'll send you a tracking link! 🚚";
+    } else if (msgLower.includes('return') || msgLower.includes('refund') || msgLower.includes('exchange')) {
+      response = "🔁 We accept returns within 7 days of delivery for defective or damaged products. Because our items are custom handmade, we don't accept returns for change of mind. Just email us at hello@resinverse.in with photos if there's an issue!";
+    } else if (msgLower.includes('custom') || msgLower.includes('personalize') || msgLower.includes('make my own')) {
+      response = "✨ Yes! We love making custom pieces. You can personalize almost any product with names, specific colors, flowers, or gold flakes. Just use our Design Generator tool or add your requests in the order notes! Custom orders take 7-14 days to perfect.";
+    } else if (msgLower.includes('price') || msgLower.includes('cost') || msgLower.includes('expensive')) {
+      response = "💰 Our beautifully handcrafted pieces range from ₹99 (for small phone charms) up to ₹2999 (for large custom statement pieces). We try to offer something gorgeous for every budget!";
+    } else if (msgLower.includes('gift') || msgLower.includes('present') || msgLower.includes('girlfriend') || msgLower.includes('boyfriend') || msgLower.includes('wife')) {
+      response = "🎁 Resin art makes the absolute perfect gift! It's unique, aesthetic, and lasts forever. I recommend checking out our Lockest or Custom Keychains. You can also try out our Gift Recommender tool to find the exact perfect piece!";
+    } else if (msgLower.includes('hello') || msgLower.includes('hi') || msgLower.includes('hey')) {
+      response = "Hi there! 👋 I'm Resina. How can I add a little sparkle to your day? Let me know if you need help finding anything!";
+    } else if (msgLower.includes('thank')) {
+      response = "You're so welcome! 💜 Let me know if you need anything else!";
+    }
 
     return res.json({ response, timestamp: new Date().toISOString() });
   } catch (err) {
-    console.error('AI chat error:', err);
-    return res.status(500).json({ error: 'Chat service temporarily unavailable. Please try again.' });
+    console.error('Local chat error:', err);
+    return res.status(500).json({ error: 'Chat service temporarily unavailable.' });
   }
 });
 
