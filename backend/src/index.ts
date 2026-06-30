@@ -8,6 +8,9 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 
+// Bypass strict SSL for proxy environments (fixes UNABLE_TO_VERIFY_LEAF_SIGNATURE)
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 dotenv.config();
 
 import authRoutes from './routes/auth';
