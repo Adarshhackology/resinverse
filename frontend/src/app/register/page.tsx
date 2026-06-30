@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Mail, Lock, User, Phone, Sparkles, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, Phone, Sparkles, Loader2, Eye, EyeOff } from 'lucide-react';
 import { authAPI } from '@/lib/api';
 import { useStore } from '@/lib/store';
 import toast from 'react-hot-toast';
@@ -22,11 +22,27 @@ const registerSchema = z.object({
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
+const IMAGES = [
+  '/login-slider/2.jpg',
+  '/login-slider/3.jpg',
+  '/login-slider/4.jpg',
+  '/login-slider/1.jpg',
+];
+
 export default function RegisterPage() {
   const router = useRouter();
   const { setUser } = useStore();
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Auto-scroll images every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % IMAGES.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -47,125 +63,175 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-resin-hero flex items-center justify-center px-4 relative overflow-hidden">
-      {/* Background orbs */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.2) 0%, transparent 70%)' }} />
-        
-        {/* Floating Locket */}
-        <motion.img 
-          initial={{ y: 20, opacity: 0, rotate: -10 }}
-          animate={{ y: [0, -20, 0], opacity: 0.8, rotate: [-10, 0, -10] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600" 
-          alt="Locket" 
-          className="absolute -right-20 top-32 w-72 h-72 object-cover rounded-full mix-blend-screen blur-[2px] hidden md:block"
-        />
-        <motion.img 
-          initial={{ y: -20, opacity: 0, rotate: 10 }}
-          animate={{ y: [0, 20, 0], opacity: 0.6, rotate: [10, 0, 10] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          src="https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600" 
-          alt="Keychain" 
-          className="absolute -left-20 bottom-20 w-64 h-64 object-cover rounded-full mix-blend-screen blur-[2px] hidden md:block"
-        />
-      </div>
+    <div className="min-h-screen bg-[#0a0612] flex overflow-hidden flex-row-reverse">
+      
+      {/* RIGHT SIDE - BEAUTIFUL IMAGE SLIDER (Hidden on mobile) */}
+      <div className="hidden lg:flex w-1/2 relative flex-col justify-end p-12">
+        <div className="absolute inset-0 z-0">
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={currentImageIndex}
+              src={IMAGES[currentImageIndex]}
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5, ease: 'easeInOut' }}
+              className="absolute inset-0 w-full h-full object-cover"
+              alt="Resin Art"
+            />
+          </AnimatePresence>
+          {/* Gradient Overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0612] via-black/40 to-transparent" />
+        </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-4">
+        {/* Text over images */}
+        <div className="relative z-10 max-w-lg mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 mb-12 opacity-80 hover:opacity-100 transition-opacity">
             <div className="w-10 h-10 rounded-xl bg-purple-pink flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className="font-display font-bold text-2xl gradient-text-purple">ResinVerse</span>
+            <span className="font-display font-bold text-2xl text-white">ResinVerse</span>
           </Link>
-          <h1 className="font-display text-3xl font-bold text-white mt-4">Create Account</h1>
-          <p className="text-white/40 mt-2">Join thousands of aesthetic lovers 💜</p>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+          >
+            <h2 className="text-5xl font-display font-bold text-white mb-4 leading-tight">
+              Aesthetic.<br/>
+              <span className="text-pink-300 italic">Uniquely yours.</span>
+            </h2>
+            <p className="text-white/80 text-lg leading-relaxed font-light">
+              Join thousands of creators and aesthetic lovers. Track orders, earn loyalty points, and get exclusive early access to drops.
+            </p>
+          </motion.div>
         </div>
 
-        <div className="glass-card rounded-3xl p-8">
-          <GoogleAuthButton />
+        {/* Slider Indicators */}
+        <div className="relative z-10 flex gap-3">
+          {IMAGES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentImageIndex(i)}
+              className={`h-1.5 rounded-full transition-all duration-500 ${i === currentImageIndex ? 'w-10 bg-white' : 'w-2.5 bg-white/40 hover:bg-white/60'}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* LEFT SIDE - REGISTER FORM */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 relative overflow-y-auto h-screen scrollbar-hide">
+        {/* Background glow effects */}
+        <div className="absolute inset-0 pointer-events-none hidden lg:block">
+          <div className="absolute top-1/4 left-0 w-[500px] h-[500px] rounded-full mix-blend-screen opacity-20 blur-[100px] bg-purple-600" />
+          <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] rounded-full mix-blend-screen opacity-20 blur-[100px] bg-pink-600" />
+        </div>
+
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md relative z-10 my-8 py-8">
           
-          <div className="relative flex items-center py-4">
-            <div className="flex-grow border-t border-white/10"></div>
-            <span className="flex-shrink-0 mx-4 text-white/40 text-sm">or sign up with email</span>
-            <div className="flex-grow border-t border-white/10"></div>
+          <div className="mb-8 lg:hidden text-center">
+            <Link href="/" className="inline-flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-purple-pink flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-display font-bold text-2xl gradient-text-purple">ResinVerse</span>
+            </Link>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Name */}
-            <div>
-              <label className="text-sm text-white/60 font-accent mb-1.5 block">Full Name</label>
-              <div className="relative">
-                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-400" />
-                <input {...register('name')} type="text" placeholder="Priya Sharma" className="input-glass pl-11 w-full" />
-              </div>
-              {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name.message}</p>}
+          <div className="mb-6 lg:text-left text-center">
+            <h1 className="font-display text-4xl font-bold text-white mb-2">Create Account</h1>
+            <p className="text-white/50 text-lg">Join our aesthetic community 💜</p>
+          </div>
+
+          <div className="glass-card rounded-3xl p-6 sm:p-8 border border-white/5 shadow-2xl backdrop-blur-xl">
+            <GoogleAuthButton />
+            
+            <div className="relative flex items-center py-6">
+              <div className="flex-grow border-t border-white/10"></div>
+              <span className="flex-shrink-0 mx-4 text-white/30 text-xs font-semibold uppercase tracking-widest">or sign up with email</span>
+              <div className="flex-grow border-t border-white/10"></div>
             </div>
 
-            {/* Email */}
-            <div>
-              <label className="text-sm text-white/60 font-accent mb-1.5 block">Email</label>
-              <div className="relative">
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-400" />
-                <input {...register('email')} type="email" placeholder="your@email.com" className="input-glass pl-11 w-full" />
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              
+              <div>
+                <label className="text-sm text-white/70 font-medium mb-1.5 block">Full Name</label>
+                <div className="relative group">
+                  <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-purple-400 transition-colors" />
+                  <input 
+                    {...register('name')} 
+                    type="text" 
+                    placeholder="Adarsh Sharma" 
+                    className="input-glass pl-12 w-full h-11 text-[15px] bg-white/5 border-white/10 focus:border-purple-500/50 focus:bg-white/10 transition-all rounded-xl" 
+                  />
+                </div>
+                {errors.name && <p className="text-pink-400 text-xs mt-1.5 ml-1">{errors.name.message}</p>}
               </div>
-              {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
-            </div>
 
-            {/* Phone */}
-            <div>
-              <label className="text-sm text-white/60 font-accent mb-1.5 block">Phone (optional)</label>
-              <div className="relative">
-                <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-400" />
-                <input {...register('phone')} type="tel" placeholder="+91 98765 43210" className="input-glass pl-11 w-full" />
+              <div>
+                <label className="text-sm text-white/70 font-medium mb-1.5 block">Email Address</label>
+                <div className="relative group">
+                  <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-purple-400 transition-colors" />
+                  <input 
+                    {...register('email')} 
+                    type="email" 
+                    placeholder="your@email.com" 
+                    className="input-glass pl-12 w-full h-11 text-[15px] bg-white/5 border-white/10 focus:border-purple-500/50 focus:bg-white/10 transition-all rounded-xl" 
+                  />
+                </div>
+                {errors.email && <p className="text-pink-400 text-xs mt-1.5 ml-1">{errors.email.message}</p>}
               </div>
-            </div>
 
-            {/* Password */}
-            <div>
-              <label className="text-sm text-white/60 font-accent mb-1.5 block">Password</label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-400" />
-                <input {...register('password')} type={showPassword ? 'text' : 'password'} placeholder="At least 8 characters" className="input-glass pl-11 pr-11 w-full" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors">
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+              <div>
+                <label className="text-sm text-white/70 font-medium mb-1.5 block">Phone Number (Optional)</label>
+                <div className="relative group">
+                  <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-purple-400 transition-colors" />
+                  <input 
+                    {...register('phone')} 
+                    type="tel" 
+                    placeholder="+91 98765 43210" 
+                    className="input-glass pl-12 w-full h-11 text-[15px] bg-white/5 border-white/10 focus:border-purple-500/50 focus:bg-white/10 transition-all rounded-xl" 
+                  />
+                </div>
               </div>
-              {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password.message}</p>}
-            </div>
 
-            <p className="text-xs text-white/30">By creating an account, you agree to our Terms & Privacy Policy</p>
+              <div>
+                <label className="text-sm text-white/70 font-medium mb-1.5 block">Password</label>
+                <div className="relative group">
+                  <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-purple-400 transition-colors" />
+                  <input 
+                    {...register('password')} 
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a strong password" 
+                    className="input-glass pl-12 pr-12 w-full h-11 text-[15px] bg-white/5 border-white/10 focus:border-purple-500/50 focus:bg-white/10 transition-all rounded-xl" 
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-pink-400 text-xs mt-1.5 ml-1">{errors.password.message}</p>}
+              </div>
 
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary py-3.5 flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {loading ? 'Creating account...' : <><Sparkles size={16} /> Create Account</>}
-            </motion.button>
-          </form>
+              <button 
+                type="submit" 
+                disabled={loading} 
+                className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 text-white font-semibold text-[15px] shadow-lg shadow-purple-500/25 transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
+              </button>
+            </form>
 
-          <div className="text-center mt-6">
-            <p className="text-white/40 text-sm">
-              Already have an account?{' '}
-              <Link href="/login" className="text-purple-400 hover:text-purple-300 font-semibold transition-colors">Sign In</Link>
+            <p className="text-center text-sm text-white/50 mt-6">
+              Already have an account? <Link href="/login" className="text-white hover:text-purple-400 font-medium transition-colors">Sign in here</Link>
             </p>
           </div>
-        </div>
+        </motion.div>
+      </div>
 
-        {/* Coupon callout */}
-        <div className="mt-4 glass rounded-2xl p-4 text-center">
-          <p className="text-sm text-white/60">🎁 New members get <span className="text-purple-400 font-semibold">20% off</span> with code <span className="badge-purple text-xs">WELCOME20</span></p>
-        </div>
-      </motion.div>
     </div>
   );
 }
