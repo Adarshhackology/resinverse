@@ -192,16 +192,29 @@ router.post('/payments/:id/verify', authenticate, requireAdmin, async (req: Auth
     if (!payment) return res.status(404).json({ error: 'Payment not found' });
 
     if (action === 'APPROVE') {
-      await prisma.$transaction([
+      const [updatedPayment, updatedOrder] = await prisma.$transaction([
         prisma.payment.update({
           where: { id: payment.id },
           data: { status: 'PAID' }
         }),
         prisma.order.update({
           where: { id: payment.orderId },
-          data: { status: 'CONFIRMED' }
+          data: { status: 'CONFIRMED' },
+          include: { user: true }
         })
       ]);
+
+      // Send Admin Email Alert (non-blocking)
+      import('../lib/mailer').then(({ sendPaymentAdminAlert }) => {
+        sendPaymentAdminAlert(
+          updatedOrder.id,
+          updatedOrder.totalAmount,
+          updatedOrder.user.name || 'Customer',
+          updatedOrder.user.email,
+          updatedOrder.user.phone || ''
+        );
+      }).catch(e => console.error('Failed to trigger alert:', e));
+
       return res.json({ success: true, status: 'PAID' });
     } else if (action === 'REJECT') {
       await prisma.$transaction([

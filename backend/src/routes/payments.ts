@@ -121,7 +121,7 @@ router.post('/razorpay/verify', authenticate, async (req: AuthRequest, res: Resp
     }
 
     // Update payment and order status
-    await prisma.$transaction([
+    const [updatedPayment, updatedOrder] = await prisma.$transaction([
       prisma.payment.update({
         where: { orderId },
         data: { status: 'PAID', transactionId: razorpay_payment_id, metadata: { razorpay_order_id, razorpay_payment_id, razorpay_signature } },
@@ -129,8 +129,20 @@ router.post('/razorpay/verify', authenticate, async (req: AuthRequest, res: Resp
       prisma.order.update({
         where: { id: orderId },
         data: { status: 'CONFIRMED' },
+        include: { user: true }
       }),
     ]);
+
+    // Send Admin Email Alert (non-blocking)
+    import('../lib/mailer').then(({ sendPaymentAdminAlert }) => {
+      sendPaymentAdminAlert(
+        updatedOrder.id,
+        updatedOrder.totalAmount,
+        updatedOrder.user.name || 'Customer',
+        updatedOrder.user.email,
+        updatedOrder.user.phone || ''
+      );
+    }).catch(e => console.error('Failed to trigger alert:', e));
 
     return res.json({ success: true, message: 'Payment verified successfully' });
   } catch (err) {
