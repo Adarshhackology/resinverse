@@ -192,7 +192,7 @@ export function Navbar() {
                   </AnimatePresence>
                 </div>
               ) : (
-                <Link href="/login">
+                <Link href="/login" className="hidden sm:block">
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     className="btn-primary text-sm py-2 px-5"
@@ -236,6 +236,16 @@ export function Navbar() {
                     {link.label}
                   </Link>
                 ))}
+                
+                {/* Mobile Auth Links */}
+                {!user && (
+                  <Link
+                    href="/login"
+                    className="px-4 py-3 mt-2 rounded-xl text-sm font-medium font-accent bg-white/10 text-white text-center hover:bg-white/20 transition-all"
+                  >
+                    Sign In
+                  </Link>
+                )}
               </div>
             </motion.div>
           )}

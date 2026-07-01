@@ -79,7 +79,7 @@ function HeroSection() {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-resin-hero">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-resin-hero pt-24 lg:pt-0">
       <FloatingParticles />
 
       {/* Radial gradient orbs */}
